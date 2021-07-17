@@ -1,6 +1,7 @@
+use badtracing::objects::Sphere;
 use badtracing::ray::Ray;
 use badtracing::vec3::Vec3;
-use badtracing::{ray_color, write_color, Point3};
+use badtracing::{ray_color, write_color, Hittable, Point3};
 
 fn main() {
     // Image
@@ -19,6 +20,18 @@ fn main() {
     let lower_left_corner =
         origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, focal_length);
 
+    // World
+    let world: Vec<Box<dyn Hittable>> = vec![
+        Box::new(Sphere {
+            center: Point3::new(0.0, 0.0, -1.0),
+            radius: 0.5,
+        }),
+        Box::new(Sphere {
+            center: Point3::new(0.0, -100.5, -1.0),
+            radius: 100.0,
+        }),
+    ];
+
     // Render
     println!("P3");
     println!("{} {}", IMAGE_WIDTH, IMAGE_HEIGHT);
@@ -35,7 +48,7 @@ fn main() {
                 lower_left_corner + u * horizontal + v * vertical - origin,
             );
 
-            let color = ray_color(r);
+            let color = ray_color(r, &world);
             write_color(color);
         }
     }
