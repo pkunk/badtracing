@@ -110,3 +110,17 @@ pub fn random_vec3_in_unit_sphere<R: Rng>(rng: &mut R) -> Vec3 {
 pub fn random_unit_vec3<R: Rng>(rng: &mut R) -> Vec3 {
     random_vec3_in_unit_sphere(rng).unit_vector()
 }
+
+pub fn random_vec3_in_unit_disk<R: Rng>(rng: &mut R) -> Vec3 {
+    loop {
+        let p = Vec3::new(
+            random_f64_mm(rng, -1.0, 1.0),
+            random_f64_mm(rng, -1.0, 1.0),
+            0.0,
+        );
+        if p.length_squared() >= 1.0 {
+            continue;
+        }
+        return p;
+    }
+}

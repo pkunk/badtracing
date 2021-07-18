@@ -63,12 +63,21 @@ fn main() {
 
     // Camera
     let aspect_ratio = IMAGE_WIDTH as f64 / IMAGE_HEIGHT as f64;
+
+    let look_from = Point3::new(3.0, 3.0, 2.0);
+    let look_at = Point3::new(0.0, 0.0, -1.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = (look_from - look_at).length();
+    let aperture = 2.0;
+
     let cam = Camera::new(
-        Point3::new(-2.0, 2.0, 1.0),
-        Point3::new(0.0, 0.0, -1.0),
-        Vec3::new(0.0, 1.0, 0.0),
+        look_from,
+        look_at,
+        vup,
         20.0,
         aspect_ratio,
+        aperture,
+        dist_to_focus,
     );
 
     // Render
@@ -86,7 +95,7 @@ fn main() {
                 for _s in 0..SAMPLES_PER_PIXEL {
                     let u = (f64::from(i) + random_f64(&mut rng)) / f64::from(IMAGE_WIDTH);
                     let v = (f64::from(j) + random_f64(&mut rng)) / f64::from(IMAGE_HEIGHT);
-                    let r = cam.get_ray(u, v);
+                    let r = cam.get_ray(&mut rng, u, v);
                     pixel_color += ray_color(&mut rng, r, &world, MAX_DEPTH);
                 }
                 scanline.push(pixel_color);
