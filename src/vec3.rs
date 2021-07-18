@@ -36,6 +36,15 @@ impl Vec3 {
     pub fn unit_vector(self) -> Self {
         self / self.length()
     }
+
+    pub fn near_zero(self) -> bool {
+        const E: f64 = 1e-8;
+        self.x.abs() < E && self.y.abs() < E && self.z.abs() < E
+    }
+
+    pub fn reflect(self, n: Vec3) -> Vec3 {
+        self - 2.0 * self.dot(n) * n
+    }
 }
 
 impl Index<usize> for Vec3 {

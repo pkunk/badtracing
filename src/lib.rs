@@ -1,11 +1,16 @@
+use rand::Rng;
+
+use objects::Hittable;
+
+use crate::materials::{Material, MaterialProperties};
+use crate::ray::Ray;
+use crate::vec3::Vec3;
+
 pub mod camera;
+pub mod materials;
 pub mod objects;
 pub mod ray;
 pub mod vec3;
-
-use crate::ray::Ray;
-use crate::vec3::Vec3;
-use rand::Rng;
 
 pub type Point3 = Vec3;
 pub type Color = Vec3;
@@ -14,12 +19,13 @@ pub type Color = Vec3;
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
+    pub material: Material,
     pub t: f64,
     pub front_face: bool,
 }
 
 impl HitRecord {
-    pub fn new(p: Point3, direction: Vec3, t: f64, outward_normal: Vec3) -> Self {
+    pub fn new(p: Point3, direction: Vec3, t: f64, outward_normal: Vec3, m: Material) -> Self {
         let front_face = direction.dot(outward_normal) < 0.0;
         let normal = if front_face {
             outward_normal
@@ -29,21 +35,10 @@ impl HitRecord {
         HitRecord {
             p,
             normal,
+            material: m,
             t,
             front_face,
         }
-    }
-}
-
-pub trait Hittable {
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
-}
-
-impl Hittable for Vec<Box<dyn Hittable + Sync + Send>> {
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        self.iter()
-            .flat_map(|h| h.hit(r, t_min, t_max))
-            .min_by(|r1, r2| r1.t.partial_cmp(&r2.t).unwrap())
     }
 }
 
@@ -68,10 +63,12 @@ pub fn ray_color<R: Rng>(rng: &mut R, r: Ray, world: &dyn Hittable, depth: i32) 
         return Color::default();
     }
     match world.hit(r, 0.001, f64::INFINITY) {
-        Some(rec) => {
-            let target = rec.p + rec.normal + random_unit_vec3(rng);
-            0.5 * ray_color(rng, Ray::new(rec.p, target - rec.p), world, depth - 1)
-        }
+        Some(rec) => match rec.material.scatter(rng, r, rec) {
+            Some((attenuation, scattered)) => {
+                attenuation * ray_color(rng, scattered, world, depth - 1)
+            }
+            None => Color::default(),
+        },
         None => {
             let unit_direction = r.dir.unit_vector();
             let t = 0.5 * (unit_direction.y + 1.0);

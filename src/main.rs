@@ -1,9 +1,11 @@
-use badtracing::camera::Camera;
-use badtracing::objects::Sphere;
-use badtracing::{random_f64, ray_color, write_color, Color, Hittable, Point3};
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
 use rayon::prelude::*;
+
+use badtracing::camera::Camera;
+use badtracing::materials::{Lambertian, Metal};
+use badtracing::objects::{Object, Sphere};
+use badtracing::{random_f64, ray_color, write_color, Color, Point3};
 
 fn main() {
     // Image
@@ -16,15 +18,46 @@ fn main() {
     let cam = Camera::default();
 
     // World
-    let world: Vec<Box<dyn Hittable + Sync + Send>> = vec![
-        Box::new(Sphere {
-            center: Point3::new(0.0, 0.0, -1.0),
-            radius: 0.5,
-        }),
-        Box::new(Sphere {
+    let material_ground = Lambertian {
+        albedo: Color::new(0.8, 0.8, 0.0),
+    };
+    let material_center = Lambertian {
+        albedo: Color::new(0.7, 0.3, 0.3),
+    };
+    let material_left = Metal {
+        albedo: Color::new(0.8, 0.8, 0.8),
+        fuzz: 0.3,
+    };
+    let material_right = Metal {
+        albedo: Color::new(0.8, 0.6, 0.2),
+        fuzz: 1.0,
+    };
+
+    let world: Vec<Object> = vec![
+        Sphere {
             center: Point3::new(0.0, -100.5, -1.0),
             radius: 100.0,
-        }),
+            material: material_ground.into(),
+        }
+        .into(),
+        Sphere {
+            center: Point3::new(0.0, 0.0, -1.0),
+            radius: 0.5,
+            material: material_center.into(),
+        }
+        .into(),
+        Sphere {
+            center: Point3::new(-1.0, 0.0, -1.0),
+            radius: 0.5,
+            material: material_left.into(),
+        }
+        .into(),
+        Sphere {
+            center: Point3::new(1.0, 0.0, -1.0),
+            radius: 0.5,
+            material: material_right.into(),
+        }
+        .into(),
     ];
 
     // Render
