@@ -5,6 +5,7 @@ use rayon::prelude::*;
 use badtracing::camera::Camera;
 use badtracing::materials::{Dielectric, Lambertian, Metal};
 use badtracing::objects::{Object, Sphere};
+use badtracing::vec3::Vec3;
 use badtracing::{random_f64, ray_color, write_color, Color, Point3};
 
 fn main() {
@@ -13,9 +14,6 @@ fn main() {
     const IMAGE_HEIGHT: i32 = 255;
     const SAMPLES_PER_PIXEL: i32 = 100;
     const MAX_DEPTH: i32 = 50;
-
-    // Camera
-    let cam = Camera::default();
 
     // World
     let material_ground = Lambertian {
@@ -62,6 +60,16 @@ fn main() {
         }
         .into(),
     ];
+
+    // Camera
+    let aspect_ratio = IMAGE_WIDTH as f64 / IMAGE_HEIGHT as f64;
+    let cam = Camera::new(
+        Point3::new(-2.0, 2.0, 1.0),
+        Point3::new(0.0, 0.0, -1.0),
+        Vec3::new(0.0, 1.0, 0.0),
+        20.0,
+        aspect_ratio,
+    );
 
     // Render
     println!("P3");
