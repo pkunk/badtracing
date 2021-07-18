@@ -1,8 +1,8 @@
 use badtracing::camera::Camera;
 use badtracing::objects::Sphere;
-use badtracing::{ray_color, write_color, Color, Hittable, Point3};
+use badtracing::{random_f64, ray_color, write_color, Color, Hittable, Point3};
 use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
+use rand::SeedableRng;
 use rayon::prelude::*;
 
 fn main() {
@@ -10,6 +10,7 @@ fn main() {
     const IMAGE_WIDTH: i32 = 400;
     const IMAGE_HEIGHT: i32 = 255;
     const SAMPLES_PER_PIXEL: i32 = 100;
+    const MAX_DEPTH: i32 = 50;
 
     // Camera
     let cam = Camera::default();
@@ -39,10 +40,10 @@ fn main() {
             for i in (0..IMAGE_WIDTH).rev() {
                 let mut pixel_color = Color::default();
                 for _s in 0..SAMPLES_PER_PIXEL {
-                    let u = (f64::from(i) + rng.gen::<f64>()) / f64::from(IMAGE_WIDTH);
-                    let v = (f64::from(j) + rng.gen::<f64>()) / f64::from(IMAGE_HEIGHT);
+                    let u = (f64::from(i) + random_f64(&mut rng)) / f64::from(IMAGE_WIDTH);
+                    let v = (f64::from(j) + random_f64(&mut rng)) / f64::from(IMAGE_HEIGHT);
                     let r = cam.get_ray(u, v);
-                    pixel_color += ray_color(r, &world);
+                    pixel_color += ray_color(&mut rng, r, &world, MAX_DEPTH);
                 }
                 scanline.push(pixel_color);
             }
