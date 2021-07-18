@@ -38,7 +38,7 @@ pub trait Hittable {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 }
 
-impl Hittable for Vec<Box<dyn Hittable>> {
+impl Hittable for Vec<Box<dyn Hittable + Sync + Send>> {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         self.iter()
             .flat_map(|h| h.hit(r, t_min, t_max))
