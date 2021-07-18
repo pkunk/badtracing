@@ -1,3 +1,4 @@
+pub mod camera;
 pub mod objects;
 pub mod ray;
 pub mod vec3;
@@ -45,14 +46,19 @@ impl Hittable for Vec<Box<dyn Hittable>> {
     }
 }
 
-pub fn write_color(pixel_color: Color) {
+pub fn write_color(pixel_color: Color, samples_per_pixel: i32) {
+    let mut r = pixel_color.x;
+    let mut g = pixel_color.y;
+    let mut b = pixel_color.z;
+
+    // Divide the color by the number of samples.
+    let scale = 1.0 / samples_per_pixel as f64;
+    r = (r * scale).clamp(0.0, 0.999) * 256.0;
+    g = (g * scale).clamp(0.0, 0.999) * 256.0;
+    b = (b * scale).clamp(0.0, 0.999) * 256.0;
+
     // Write the translated [0,255] value of each color component.
-    println!(
-        "{} {} {}",
-        (255.999 * pixel_color.x) as i32,
-        (255.999 * pixel_color.y) as i32,
-        (255.999 * pixel_color.z) as i32
-    )
+    println!("{} {} {}", r as i32, g as i32, b as i32)
 }
 
 pub fn ray_color(r: Ray, world: &dyn Hittable) -> Color {

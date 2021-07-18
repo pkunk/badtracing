@@ -1,24 +1,17 @@
+use badtracing::camera::Camera;
 use badtracing::objects::Sphere;
-use badtracing::ray::Ray;
-use badtracing::vec3::Vec3;
-use badtracing::{ray_color, write_color, Hittable, Point3};
+use badtracing::{ray_color, write_color, Color, Hittable, Point3};
+use rand::rngs::SmallRng;
+use rand::{Rng, SeedableRng};
 
 fn main() {
     // Image
     const IMAGE_WIDTH: i32 = 400;
     const IMAGE_HEIGHT: i32 = 255;
-    const ASPECT_RATIO: f64 = IMAGE_WIDTH as f64 / IMAGE_HEIGHT as f64;
+    const SAMPLES_PER_PIXEL: i32 = 100;
 
     // Camera
-    let viewport_height = 2.0;
-    let viewport_width = ASPECT_RATIO * viewport_height;
-    let focal_length = 1.0;
-
-    let origin = Point3::new(0.0, 0.0, 0.0);
-    let horizontal = Vec3::new(viewport_width, 0.0, 0.0);
-    let vertical = Vec3::new(0.0, viewport_height, 0.0);
-    let lower_left_corner =
-        origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, focal_length);
+    let cam = Camera::default();
 
     // World
     let world: Vec<Box<dyn Hittable>> = vec![
@@ -39,17 +32,16 @@ fn main() {
 
     for j in (0..IMAGE_HEIGHT).rev() {
         eprint!("\rScanlines remaining: {} ", j);
+        let mut rng = SmallRng::seed_from_u64(j as u64);
         for i in 0..IMAGE_WIDTH {
-            let u = f64::from(i) / f64::from(IMAGE_WIDTH - 1);
-            let v = f64::from(j) / f64::from(IMAGE_HEIGHT - 1);
-
-            let r = Ray::new(
-                origin,
-                lower_left_corner + u * horizontal + v * vertical - origin,
-            );
-
-            let color = ray_color(r, &world);
-            write_color(color);
+            let mut pixel_color = Color::default();
+            for _s in 0..SAMPLES_PER_PIXEL {
+                let u = (f64::from(i) + rng.gen::<f64>()) / f64::from(IMAGE_WIDTH);
+                let v = (f64::from(j) + rng.gen::<f64>()) / f64::from(IMAGE_HEIGHT);
+                let r = cam.get_ray(u, v);
+                pixel_color += ray_color(r, &world);
+            }
+            write_color(pixel_color, SAMPLES_PER_PIXEL);
         }
     }
 
