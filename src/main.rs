@@ -47,10 +47,11 @@ fn main() {
 
     let render: Vec<Color> = (0..IMAGE_HEIGHT)
         .into_par_iter()
+        .rev()
         .flat_map(|j| {
             let mut rng = SmallRng::seed_from_u64(j as u64);
             let mut scanline = Vec::with_capacity(IMAGE_WIDTH as usize);
-            for i in (0..IMAGE_WIDTH).rev() {
+            for i in 0..IMAGE_WIDTH {
                 let mut pixel_color = Color::default();
                 for _s in 0..SAMPLES_PER_PIXEL {
                     let u = (f64::from(i) + random_f64(&mut rng)) / f64::from(IMAGE_WIDTH);
@@ -72,7 +73,6 @@ fn main() {
     println!("255");
     render
         .into_iter()
-        .rev()
         .for_each(|pixel_color| write_color(pixel_color, SAMPLES_PER_PIXEL));
 
     eprintln!("\nDone.");
