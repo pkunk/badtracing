@@ -4,7 +4,7 @@ use rayon::prelude::*;
 
 use badtracing::camera::Camera;
 use badtracing::materials::{Dielectric, Lambertian, Metal};
-use badtracing::objects::{Object, Sphere};
+use badtracing::objects::{Cube, Object, Sphere};
 use badtracing::vec3::Vec3;
 use badtracing::{
     random_f64, random_f64_mm, random_vec3, random_vec3_mm, ray_color, write_color, Color, Point3,
@@ -57,7 +57,7 @@ fn main() {
                     let u = (f64::from(i) + random_f64(&mut rng)) / f64::from(IMAGE_WIDTH);
                     let v = (f64::from(j) + random_f64(&mut rng)) / f64::from(IMAGE_HEIGHT);
                     let r = cam.get_ray(&mut rng, u, v);
-                    pixel_color += ray_color(&mut rng, r, &world, MAX_DEPTH);
+                    pixel_color += ray_color(&mut rng, r, world.as_ref(), MAX_DEPTH);
                 }
                 scanline.push(pixel_color);
             }
@@ -109,28 +109,42 @@ fn random_scene() -> Vec<Object> {
             );
 
             if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
-                let sphere_material;
-                if choose_mat < 0.8 {
+                let material;
+                if choose_mat < 0.7 {
                     // diffuse
                     let albedo: Color = random_vec3(&mut rng) * random_vec3(&mut rng);
-                    sphere_material = Lambertian { albedo }.into();
-                } else if choose_mat < 0.95 {
+                    material = Lambertian { albedo }.into();
+                } else if choose_mat < 0.9 {
                     // metal
                     let albedo: Color = random_vec3_mm(&mut rng, 0.5, 1.0);
                     let fuzz = random_f64_mm(&mut rng, 0.0, 0.5);
-                    sphere_material = Metal { albedo, fuzz }.into();
+                    material = Metal { albedo, fuzz }.into();
                 } else {
                     // glass
-                    sphere_material = Dielectric { ir: 1.5 }.into();
+                    material = Dielectric { ir: 1.5 }.into();
                 }
-                world.push(
-                    Sphere {
-                        center,
-                        radius: 0.2,
-                        material: sphere_material,
-                    }
-                    .into(),
-                )
+                let direction = random_f64(&mut rng);
+                if direction > 0.2 {
+                    world.push(
+                        Sphere {
+                            center,
+                            radius: 0.2,
+                            material,
+                        }
+                        .into(),
+                    )
+                } else {
+                    world.push(
+                        Cube::new(
+                            center - Vec3::new(0.0, 0.05, 0.0),
+                            0.15,
+                            Vec3::new(0.0, 1.0, 0.0),
+                            Vec3::new(1.0 - direction, 0.0, 0.0),
+                            material,
+                        )
+                        .into(),
+                    )
+                }
             }
         }
     }

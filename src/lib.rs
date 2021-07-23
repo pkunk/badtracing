@@ -13,19 +13,20 @@ pub mod ray;
 pub mod vec3;
 
 pub type Point3 = Vec3;
+pub type UnitVec3 = Vec3;
 pub type Color = Vec3;
 
 #[derive(Debug, Copy, Clone)]
 pub struct HitRecord {
     pub p: Point3,
-    pub normal: Vec3,
+    pub normal: UnitVec3,
     pub material: Material,
     pub t: f64,
     pub front_face: bool,
 }
 
 impl HitRecord {
-    pub fn new(p: Point3, direction: Vec3, t: f64, outward_normal: Vec3, m: Material) -> Self {
+    pub fn new(p: Point3, direction: Vec3, t: f64, outward_normal: UnitVec3, m: Material) -> Self {
         let front_face = direction.dot(outward_normal) < 0.0;
         let normal = if front_face {
             outward_normal
@@ -57,7 +58,7 @@ pub fn write_color(pixel_color: Color, samples_per_pixel: i32) {
     println!("{} {} {}", ri, gi, bi)
 }
 
-pub fn ray_color<R: Rng>(rng: &mut R, r: Ray, world: &dyn Hittable, depth: i32) -> Color {
+pub fn ray_color<R: Rng, H: Hittable>(rng: &mut R, r: Ray, world: H, depth: i32) -> Color {
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if depth <= 0 {
         return Color::default();

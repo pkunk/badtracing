@@ -1,7 +1,8 @@
 use crate::materials::Material;
 use crate::ray::Ray;
-use crate::{HitRecord, Point3};
+use crate::{HitRecord, Point3, UnitVec3};
 
+use crate::vec3::Vec3;
 use enum_dispatch::enum_dispatch;
 
 #[enum_dispatch]
@@ -9,7 +10,7 @@ pub trait Hittable {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 }
 
-impl Hittable for Vec<Object> {
+impl Hittable for &[Object] {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         self.iter()
             .flat_map(|h| h.hit(r, t_min, t_max))
@@ -21,6 +22,8 @@ impl Hittable for Vec<Object> {
 #[derive(Copy, Clone, Debug)]
 pub enum Object {
     Sphere,
+    Square,
+    Cube,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -57,5 +60,129 @@ impl Hittable for Sphere {
         let outward_normal = (p - self.center) / self.radius;
 
         Some(HitRecord::new(p, r.dir, t, outward_normal, self.material))
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Square {
+    center: Point3,
+    radius: f64,
+    normal: UnitVec3,
+    orientation: UnitVec3,
+    material: Material,
+}
+
+impl Hittable for Square {
+    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let oc = r.orig - self.center;
+        let d = r.dir.x * self.normal.x + r.dir.y * self.normal.y + r.dir.z * self.normal.z;
+        if d.abs() < 1e-16 {
+            return None;
+        }
+        let a = -oc.x * self.normal.x - oc.y * self.normal.y - oc.z * self.normal.z;
+
+        let t = a / d;
+        if t < t_min || t > t_max {
+            return None;
+        }
+        let p = r.at(t);
+        let op = p - self.center;
+        let outward_normal = self.normal;
+        if op.dot(self.orientation).abs() > self.radius {
+            return None;
+        }
+        if op.dot(self.orientation.cross(self.normal)).abs() > self.radius {
+            return None;
+        }
+
+        Some(HitRecord::new(p, r.dir, t, outward_normal, self.material))
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Cube {
+    face_a0: Square,
+    face_a1: Square,
+    face_b0: Square,
+    face_b1: Square,
+    face_c0: Square,
+    face_c1: Square,
+}
+
+impl Cube {
+    pub fn new(center: Point3, radius: f64, axis0: Vec3, axis1: Vec3, material: Material) -> Self {
+        assert!(axis0.cross(axis1).length_squared() > 0.0);
+        let a = axis0.unit_vector();
+        let b = (axis1 - a * axis1.dot(a)).unit_vector();
+        let c = a.cross(b);
+
+        let face_a0 = Square {
+            center: center + radius * a,
+            radius,
+            normal: a,
+            orientation: b,
+            material,
+        };
+        let face_a1 = Square {
+            center: center - radius * a,
+            radius,
+            normal: -a,
+            orientation: -b,
+            material,
+        };
+
+        let face_b0 = Square {
+            center: center + radius * b,
+            radius,
+            normal: b,
+            orientation: c,
+            material,
+        };
+        let face_b1 = Square {
+            center: center - radius * b,
+            radius,
+            normal: -b,
+            orientation: -c,
+            material,
+        };
+
+        let face_c0 = Square {
+            center: center + radius * c,
+            radius,
+            normal: c,
+            orientation: a,
+            material,
+        };
+        let face_c1 = Square {
+            center: center - radius * c,
+            radius,
+            normal: -c,
+            orientation: -a,
+            material,
+        };
+
+        Cube {
+            face_a0,
+            face_a1,
+            face_b0,
+            face_b1,
+            face_c0,
+            face_c1,
+        }
+    }
+}
+
+impl Hittable for Cube {
+    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        [
+            self.face_a0.into(),
+            self.face_a1.into(),
+            self.face_b0.into(),
+            self.face_b1.into(),
+            self.face_c0.into(),
+            self.face_c1.into(),
+        ]
+        .as_ref()
+        .hit(r, t_min, t_max)
     }
 }

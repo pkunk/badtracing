@@ -1,3 +1,4 @@
+use crate::UnitVec3;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub};
 
@@ -33,7 +34,7 @@ impl Vec3 {
         }
     }
 
-    pub fn unit_vector(self) -> Self {
+    pub fn unit_vector(self) -> UnitVec3 {
         self / self.length()
     }
 
