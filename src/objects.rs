@@ -28,9 +28,19 @@ pub enum Object {
 
 #[derive(Debug, Copy, Clone)]
 pub struct Sphere {
-    pub center: Point3,
-    pub radius: f64,
-    pub material: Material,
+    center: Point3,
+    radius: f64,
+    material: Material,
+}
+
+impl Sphere {
+    pub fn new(center: Point3, radius: f64, material: Material) -> Self {
+        Self {
+            center,
+            radius,
+            material,
+        }
+    }
 }
 
 impl Hittable for Sphere {
@@ -161,7 +171,7 @@ impl Cube {
             material,
         };
 
-        Cube {
+        Self {
             face_a0,
             face_a1,
             face_b0,

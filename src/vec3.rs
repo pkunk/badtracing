@@ -1,4 +1,5 @@
-use crate::UnitVec3;
+use crate::{random_f64_mm, UnitVec3};
+use rand::Rng;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub};
 
@@ -52,6 +53,46 @@ impl Vec3 {
         let r_out_perp = etai_over_etat * (self + cot_theta * n);
         let r_out_parallel = -(1.0 - r_out_perp.length_squared()).abs().sqrt() * n;
         r_out_perp + r_out_parallel
+    }
+
+    pub fn random<R: Rng>(rng: &mut R) -> Self {
+        Self::new(rng.gen(), rng.gen(), rng.gen())
+    }
+
+    pub fn random_mm<R: Rng>(rng: &mut R, min: f64, max: f64) -> Self {
+        Self::new(
+            random_f64_mm(rng, min, max),
+            random_f64_mm(rng, min, max),
+            random_f64_mm(rng, min, max),
+        )
+    }
+
+    pub fn random_in_unit_sphere<R: Rng>(rng: &mut R) -> Self {
+        loop {
+            let p = Self::random_mm(rng, -1.0, 1.0);
+            if p.length_squared() >= 1.0 {
+                continue;
+            }
+            return p;
+        }
+    }
+
+    pub fn random_unit_vector<R: Rng>(rng: &mut R) -> UnitVec3 {
+        Self::random_in_unit_sphere(rng).unit_vector()
+    }
+
+    pub fn random_in_unit_disk<R: Rng>(rng: &mut R) -> Self {
+        loop {
+            let p = Self::new(
+                random_f64_mm(rng, -1.0, 1.0),
+                random_f64_mm(rng, -1.0, 1.0),
+                0.0,
+            );
+            if p.length_squared() >= 1.0 {
+                continue;
+            }
+            return p;
+        }
     }
 }
 

@@ -6,9 +6,7 @@ use badtracing::camera::Camera;
 use badtracing::materials::{Dielectric, Lambertian, Metal};
 use badtracing::objects::{Cube, Object, Sphere};
 use badtracing::vec3::Vec3;
-use badtracing::{
-    random_f64, random_f64_mm, random_vec3, random_vec3_mm, ray_color, write_color, Color, Point3,
-};
+use badtracing::{random_f64, random_f64_mm, ray_color, write_color, Color, Point3};
 use std::sync::atomic::{AtomicI32, Ordering};
 use std::time::UNIX_EPOCH;
 
@@ -89,14 +87,7 @@ fn random_scene() -> Vec<Object> {
         albedo: Color::new(0.5, 0.5, 0.5),
     }
     .into();
-    world.push(
-        Sphere {
-            center: Point3::new(0.0, -1000.0, 0.0),
-            radius: 1000.0,
-            material: ground_material,
-        }
-        .into(),
-    );
+    world.push(Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, ground_material).into());
 
     let mut rng = SmallRng::seed_from_u64(UNIX_EPOCH.elapsed().unwrap().as_secs());
     for a in -11..11 {
@@ -112,11 +103,11 @@ fn random_scene() -> Vec<Object> {
                 let material;
                 if choose_mat < 0.7 {
                     // diffuse
-                    let albedo: Color = random_vec3(&mut rng) * random_vec3(&mut rng);
+                    let albedo: Color = Color::random(&mut rng) * Color::random(&mut rng);
                     material = Lambertian { albedo }.into();
                 } else if choose_mat < 0.9 {
                     // metal
-                    let albedo: Color = random_vec3_mm(&mut rng, 0.5, 1.0);
+                    let albedo: Color = Color::random_mm(&mut rng, 0.5, 1.0);
                     let fuzz = random_f64_mm(&mut rng, 0.0, 0.5);
                     material = Metal { albedo, fuzz }.into();
                 } else {
@@ -125,14 +116,7 @@ fn random_scene() -> Vec<Object> {
                 }
                 let direction = random_f64(&mut rng);
                 if direction > 0.2 {
-                    world.push(
-                        Sphere {
-                            center,
-                            radius: 0.2,
-                            material,
-                        }
-                        .into(),
-                    )
+                    world.push(Sphere::new(center, 0.2, material).into())
                 } else {
                     world.push(
                         Cube::new(
@@ -150,36 +134,36 @@ fn random_scene() -> Vec<Object> {
     }
 
     world.push(
-        Sphere {
-            center: Point3::new(0.0, 1.0, 0.0),
-            radius: 1.0,
-            material: Dielectric { ir: 1.5 }.into(),
-        }
+        Sphere::new(
+            Point3::new(0.0, 1.0, 0.0),
+            1.0,
+            Dielectric { ir: 1.5 }.into(),
+        )
         .into(),
     );
 
     world.push(
-        Sphere {
-            center: Point3::new(-4.0, 1.0, 0.0),
-            radius: 1.0,
-            material: Lambertian {
+        Sphere::new(
+            Point3::new(-4.0, 1.0, 0.0),
+            1.0,
+            Lambertian {
                 albedo: Color::new(0.4, 0.2, 0.1),
             }
             .into(),
-        }
+        )
         .into(),
     );
 
     world.push(
-        Sphere {
-            center: Point3::new(4.0, 1.0, 0.0),
-            radius: 1.0,
-            material: Metal {
+        Sphere::new(
+            Point3::new(4.0, 1.0, 0.0),
+            1.0,
+            Metal {
                 albedo: Color::new(0.7, 0.6, 0.5),
                 fuzz: 0.0,
             }
             .into(),
-        }
+        )
         .into(),
     );
 

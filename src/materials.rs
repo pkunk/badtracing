@@ -1,6 +1,7 @@
 use crate::ray::Ray;
-use crate::{random_f64, random_unit_vec3, random_vec3_in_unit_sphere, Color, HitRecord};
+use crate::{random_f64, Color, HitRecord};
 
+use crate::vec3::Vec3;
 use enum_dispatch::enum_dispatch;
 use rand::Rng;
 
@@ -23,8 +24,8 @@ pub struct Lambertian {
 }
 
 impl MaterialProperties for Lambertian {
-    fn scatter<R: Rng>(&self, rng: &mut R, r: Ray, rec: HitRecord) -> Option<(Color, Ray)> {
-        let mut scatter_direction = rec.normal + random_unit_vec3(rng);
+    fn scatter<R: Rng>(&self, rng: &mut R, _r: Ray, rec: HitRecord) -> Option<(Color, Ray)> {
+        let mut scatter_direction = rec.normal + Vec3::random_unit_vector(rng);
 
         // Catch degenerate scatter direction
         if scatter_direction.near_zero() {
@@ -47,7 +48,7 @@ impl MaterialProperties for Metal {
         let reflected = r.dir.unit_vector().reflect(rec.normal);
         let scattered = Ray::new(
             rec.p,
-            reflected + self.fuzz * random_vec3_in_unit_sphere(rng),
+            reflected + self.fuzz * Vec3::random_in_unit_sphere(rng),
         );
         Some((self.albedo, scattered))
     }
