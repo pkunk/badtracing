@@ -89,17 +89,19 @@ fn random_scene() -> Vec<Object> {
     .into();
     world.push(Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, ground_material).into());
 
-    let mut rng = SmallRng::seed_from_u64(UNIX_EPOCH.elapsed().unwrap().as_secs());
+    let seed = UNIX_EPOCH.elapsed().unwrap().as_secs();
+    eprintln!("World seed: {}", seed);
+    let mut rng = SmallRng::seed_from_u64(seed);
     for a in -11..11 {
         for b in -11..11 {
             let choose_mat = random_f64(&mut rng);
             let center = Point3::new(
                 a as f64 + 0.9 * random_f64(&mut rng),
-                0.2,
+                0.0,
                 b as f64 + 0.9 * random_f64(&mut rng),
             );
 
-            if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+            if (center - Point3::new(4.0, 0.0, 0.0)).length() > 0.9 {
                 let material;
                 if choose_mat < 0.7 {
                     // diffuse
@@ -116,12 +118,14 @@ fn random_scene() -> Vec<Object> {
                 }
                 let direction = random_f64(&mut rng);
                 if direction > 0.2 {
-                    world.push(Sphere::new(center, 0.2, material).into())
+                    world.push(
+                        Sphere::new(center + Point3::new(0.0, 0.2, 0.0), 0.2, material).into(),
+                    )
                 } else {
                     world.push(
                         Cube::new(
-                            center - Vec3::new(0.0, 0.05, 0.0),
-                            0.15,
+                            center + Point3::new(0.0, 0.16, 0.0),
+                            0.16,
                             Vec3::new(0.0, 1.0, 0.0),
                             Vec3::new(1.0 - direction, 0.0, 0.0),
                             material,
