@@ -12,9 +12,17 @@ pub trait Hittable {
 
 impl Hittable for &[Object] {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        self.iter()
-            .flat_map(|h| h.hit(r, t_min, t_max))
-            .min_by(|r1, r2| r1.t.partial_cmp(&r2.t).unwrap())
+        let mut current_t = t_max;
+        let mut result = None;
+        for h in self.iter() {
+            if let Some(hit) = h.hit(r, t_min, current_t) {
+                if hit.t < current_t {
+                    current_t = hit.t;
+                    result = Some(hit);
+                }
+            }
+        }
+        result
     }
 }
 
@@ -139,6 +147,9 @@ impl Cube {
 
 impl Hittable for Cube {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        if (r.orig - self.center).length() > r.dir.length() * t_max + 2.0 * self.radius {
+            return None;
+        }
         [
             Square {
                 center: self.center + self.radius * self.a,
