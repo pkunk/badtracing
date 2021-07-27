@@ -85,11 +85,11 @@ pub struct Square {
 impl Hittable for Square {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.orig - self.center;
-        let d = r.dir.x * self.normal.x + r.dir.y * self.normal.y + r.dir.z * self.normal.z;
+        let d = r.dir.dot(self.normal);
         if d.abs() < 1e-16 {
             return None;
         }
-        let a = -oc.x * self.normal.x - oc.y * self.normal.y - oc.z * self.normal.z;
+        let a = -oc.dot(self.normal);
 
         let t = a / d;
         if t < t_min || t > t_max {
@@ -111,12 +111,12 @@ impl Hittable for Square {
 
 #[derive(Debug, Copy, Clone)]
 pub struct Cube {
-    face_a0: Square,
-    face_a1: Square,
-    face_b0: Square,
-    face_b1: Square,
-    face_c0: Square,
-    face_c1: Square,
+    center: Point3,
+    radius: f64,
+    a: Vec3,
+    b: Vec3,
+    c: Vec3,
+    material: Material,
 }
 
 impl Cube {
@@ -126,58 +126,13 @@ impl Cube {
         let b = (axis1 - a * axis1.dot(a)).unit_vector();
         let c = a.cross(b);
 
-        let face_a0 = Square {
-            center: center + radius * a,
-            radius,
-            normal: a,
-            orientation: b,
-            material,
-        };
-        let face_a1 = Square {
-            center: center - radius * a,
-            radius,
-            normal: -a,
-            orientation: -b,
-            material,
-        };
-
-        let face_b0 = Square {
-            center: center + radius * b,
-            radius,
-            normal: b,
-            orientation: c,
-            material,
-        };
-        let face_b1 = Square {
-            center: center - radius * b,
-            radius,
-            normal: -b,
-            orientation: -c,
-            material,
-        };
-
-        let face_c0 = Square {
-            center: center + radius * c,
-            radius,
-            normal: c,
-            orientation: a,
-            material,
-        };
-        let face_c1 = Square {
-            center: center - radius * c,
-            radius,
-            normal: -c,
-            orientation: -a,
-            material,
-        };
-
         Self {
-            face_a0,
-            face_a1,
-            face_b0,
-            face_b1,
-            face_c0,
-            face_c1,
+            center,
+            radius,
+            a,
+            b,
+            c,
+            material,
         }
     }
 }
@@ -185,12 +140,54 @@ impl Cube {
 impl Hittable for Cube {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         [
-            self.face_a0.into(),
-            self.face_a1.into(),
-            self.face_b0.into(),
-            self.face_b1.into(),
-            self.face_c0.into(),
-            self.face_c1.into(),
+            Square {
+                center: self.center + self.radius * self.a,
+                radius: self.radius,
+                normal: self.a,
+                orientation: self.b,
+                material: self.material,
+            }
+            .into(),
+            Square {
+                center: self.center - self.radius * self.a,
+                radius: self.radius,
+                normal: self.a,
+                orientation: self.b,
+                material: self.material,
+            }
+            .into(),
+            Square {
+                center: self.center + self.radius * self.b,
+                radius: self.radius,
+                normal: self.b,
+                orientation: self.c,
+                material: self.material,
+            }
+            .into(),
+            Square {
+                center: self.center - self.radius * self.b,
+                radius: self.radius,
+                normal: self.b,
+                orientation: self.c,
+                material: self.material,
+            }
+            .into(),
+            Square {
+                center: self.center + self.radius * self.c,
+                radius: self.radius,
+                normal: self.c,
+                orientation: self.a,
+                material: self.material,
+            }
+            .into(),
+            Square {
+                center: self.center - self.radius * self.c,
+                radius: self.radius,
+                normal: self.c,
+                orientation: self.a,
+                material: self.material,
+            }
+            .into(),
         ]
         .as_ref()
         .hit(r, t_min, t_max)
