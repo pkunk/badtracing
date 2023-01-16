@@ -1,6 +1,7 @@
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
 use rayon::prelude::*;
+use std::fmt::Display;
 
 use badtracing::camera::Camera;
 use badtracing::materials::{Dielectric, Lambertian, Metal};
@@ -76,7 +77,7 @@ fn main() {
     eprintln!("\nDone.");
 }
 
-fn print_progress(remaining: i32) {
+fn print_progress<D: Display>(remaining: D) {
     eprint!("\rScanlines remaining: {} ", remaining);
 }
 
