@@ -2,20 +2,19 @@ use crate::ray::Ray;
 use crate::{random_f64, Color, HitRecord};
 
 use crate::vec3::Vec3;
-use enum_dispatch::enum_dispatch;
 use rand::Rng;
 
-#[enum_dispatch]
+#[enum_delegate::register]
 pub trait MaterialProperties {
     fn scatter<R: Rng>(&self, rng: &mut R, r: Ray, rec: HitRecord) -> Option<(Color, Ray)>;
 }
 
-#[enum_dispatch(MaterialProperties)]
 #[derive(Copy, Clone, Debug)]
+#[enum_delegate::implement(MaterialProperties)]
 pub enum Material {
-    Lambertian,
-    Metal,
-    Dielectric,
+    Lambertian(Lambertian),
+    Metal(Metal),
+    Dielectric(Dielectric),
 }
 
 #[derive(Copy, Clone, Debug)]

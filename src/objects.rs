@@ -3,9 +3,8 @@ use crate::ray::Ray;
 use crate::{HitRecord, Point3, UnitVec3};
 
 use crate::vec3::Vec3;
-use enum_dispatch::enum_dispatch;
 
-#[enum_dispatch]
+#[enum_delegate::register]
 pub trait Hittable {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 }
@@ -26,12 +25,12 @@ impl Hittable for &[Object] {
     }
 }
 
-#[enum_dispatch(Hittable)]
 #[derive(Copy, Clone, Debug)]
+#[enum_delegate::implement(Hittable)]
 pub enum Object {
-    Sphere,
-    Square,
-    Cube,
+    Sphere(Sphere),
+    Square(Square),
+    Cube(Cube),
 }
 
 #[derive(Debug, Copy, Clone)]
